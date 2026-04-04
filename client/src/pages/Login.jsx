@@ -7,8 +7,10 @@ export default function Login({ onLogin }) {
   const [loading, setLoading] = useState(false);
   const [isSetup, setIsSetup] = useState(false); // første gang — sæt password
 
+  const API = import.meta.env.BASE_URL + 'api';
+
   useEffect(() => {
-    fetch('/api/auth/status')
+    fetch(`${API}/auth/status`)
       .then((r) => r.json())
       .then((d) => setIsSetup(!d.configured));
   }, []);
@@ -26,7 +28,7 @@ export default function Login({ onLogin }) {
 
     setLoading(true);
     try {
-      const endpoint = isSetup ? '/api/auth/setup' : '/api/auth/login';
+      const endpoint = isSetup ? `${API}/auth/setup` : `${API}/auth/login`;
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -37,7 +39,7 @@ export default function Login({ onLogin }) {
 
       if (isSetup) {
         // Efter setup — log ind automatisk
-        const loginRes = await fetch('/api/auth/login', {
+        const loginRes = await fetch(`${API}/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ password }),
