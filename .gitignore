@@ -1,0 +1,7 @@
+node_modules/
+server/database.sqlite
+server/auth.json
+backups/
+client/dist/
+.env
+*.log
