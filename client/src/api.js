@@ -1,4 +1,4 @@
-const BASE = '/api';
+const BASE = import.meta.env.BASE_URL + 'api';
 
 function getToken() {
   return localStorage.getItem('aktier_token');

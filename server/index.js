@@ -10,6 +10,14 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+// Strip /aktier prefix when running behind cPanel Passenger at a subpath
+app.use((req, _res, next) => {
+  if (req.url.startsWith('/aktier')) {
+    req.url = req.url.slice('/aktier'.length) || '/';
+  }
+  next();
+});
+
 // Auth (åbne endpoints — ingen token krævet)
 app.use('/api/auth', require('./routes/auth'));
 
