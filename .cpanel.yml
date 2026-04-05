@@ -1,6 +1,6 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=$HOME/aktier
+    - export DEPLOYPATH=/home/jacobspl/aktier
     - /bin/cp -R . $DEPLOYPATH
     - cd $DEPLOYPATH/server && npm install --production
