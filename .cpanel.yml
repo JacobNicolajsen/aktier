@@ -1,4 +1,4 @@
 ---
 deployment:
   tasks:
-    - /usr/local/bin/npm install --prefix /home/jacobspl/aktier/server --production
+    - echo "Deployed"
