@@ -1,4 +1,5 @@
 node_modules/
+tmp/
 server/database.sqlite
 server/auth.json
 backups/
