@@ -5,10 +5,8 @@ import ChangePassword from '../pages/ChangePassword';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: '📊' },
-  { to: '/beholdning', label: 'Beholdning', icon: '💼' },
-  { to: '/transaktioner', label: 'Transaktioner', icon: '🔄' },
+  { to: '/transaktioner', label: 'Transaktioner & Gevinst', icon: '🔄' },
   { to: '/maanedlig', label: 'Månedlig værdi', icon: '📅' },
-  { to: '/gevinst-tab', label: 'Gevinst / Tab', icon: '📈' },
   { to: '/udbytte', label: 'Udbytte', icon: '💰' },
   { to: '/fonde', label: 'Fonde', icon: '🏦' },
 ];

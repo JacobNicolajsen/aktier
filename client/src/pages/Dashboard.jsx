@@ -8,17 +8,28 @@ export default function Dashboard() {
   const [holdings, setHoldings] = useState([]);
   const [gains, setGains] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    Promise.all([api.getHoldings(), api.getGains()])
-      .then(([h, g]) => {
-        setHoldings(h);
-        setGains(g);
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
+  async function load() {
+    try {
+      const [h, g] = await Promise.all([api.getHoldings(), api.getGains()]);
+      setHoldings(h);
+      setGains(g);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function refresh() {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  }
+
+  useEffect(() => { load(); }, []);
 
   if (loading) return <div className="text-gray-500 text-sm">Henter data...</div>;
   if (error) return <div className="text-red-600 text-sm">Fejl: {error}</div>;
@@ -31,7 +42,12 @@ export default function Dashboard() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <button onClick={refresh} disabled={refreshing} className="btn-secondary text-sm">
+          {refreshing ? 'Opdaterer...' : '↻ Opdater kurser'}
+        </button>
+      </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard label="Porteføljeværdi" value={formatDKK(totalValue)} />
@@ -49,14 +65,9 @@ export default function Dashboard() {
         <StatCard label="Antal fonde" value={holdings.length} />
       </div>
 
-      {/* Beholdningsoversigt */}
-      <div className="card">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold">Aktuel beholdning</h2>
-          <Link to="/beholdning" className="text-sm text-sky-600 hover:underline">
-            Se alle →
-          </Link>
-        </div>
+      {/* Beholdning */}
+      <div className="card overflow-x-auto">
+        <h2 className="text-base font-semibold mb-4">Beholdning</h2>
 
         {holdings.length === 0 ? (
           <p className="text-gray-400 text-sm">
@@ -66,58 +77,82 @@ export default function Dashboard() {
             </Link>
           </p>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100">
-                <th className="table-header text-left pb-3">Fond</th>
-                <th className="table-header text-right pb-3">Aktier</th>
-                <th className="table-header text-right pb-3">Gns. kurs</th>
-                <th className="table-header text-right pb-3">Aktuel kurs</th>
-                <th className="table-header text-right pb-3">Værdi</th>
-                <th className="table-header text-right pb-3">Gevinst</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {holdings.map((h) => (
-                <tr key={h.fund_id} className="hover:bg-gray-50">
-                  <td className="py-3">
-                    <div className="font-medium">{h.name}</div>
-                    <div className="text-xs text-gray-400">{h.ticker}</div>
-                  </td>
-                  <td className="py-3 text-right tabular-nums">{formatNumber(h.shares)}</td>
-                  <td className="py-3 text-right tabular-nums">{formatDKK(h.avg_cost_per_share)}</td>
-                  <td className="py-3 text-right tabular-nums">
-                    {h.current_price ? formatDKK(h.current_price) : '–'}
-                  </td>
-                  <td className="py-3 text-right tabular-nums font-medium">
-                    {formatDKK(h.current_value)}
-                  </td>
-                  <td className="py-3 text-right tabular-nums">
-                    {h.unrealized_gain != null ? (
-                      <span className={h.unrealized_gain >= 0 ? 'gain' : 'loss'}>
-                        {formatDKK(h.unrealized_gain)}{' '}
-                        <span className="text-xs">({formatPct(h.unrealized_gain_pct)})</span>
-                      </span>
-                    ) : (
-                      '–'
-                    )}
-                  </td>
+          <>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="table-header text-left pb-3">Fond</th>
+                  <th className="table-header text-right pb-3">Antal aktier</th>
+                  <th className="table-header text-right pb-3">Gns. købskurs</th>
+                  <th className="table-header text-right pb-3">Samlet kostpris</th>
+                  <th className="table-header text-right pb-3">Aktuel kurs</th>
+                  <th className="table-header text-right pb-3">Aktuel værdi</th>
+                  <th className="table-header text-right pb-3">Urealiseret gevinst</th>
+                  <th className="table-header text-right pb-3">Andel</th>
                 </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr className="border-t-2 border-gray-200">
-                <td colSpan={4} className="py-3 font-semibold text-sm">Total</td>
-                <td className="py-3 text-right font-bold tabular-nums">{formatDKK(totalValue)}</td>
-                <td className="py-3 text-right tabular-nums">
-                  <span className={totalGain >= 0 ? 'gain' : 'loss'}>
-                    {formatDKK(totalGain)}{' '}
-                    <span className="text-xs">({formatPct(totalGainPct)})</span>
-                  </span>
-                </td>
-              </tr>
-            </tfoot>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {holdings.map((h) => {
+                  const pctOfPortfolio =
+                    totalValue > 0 && h.current_value
+                      ? (h.current_value / totalValue) * 100
+                      : null;
+                  return (
+                    <tr key={h.fund_id} className="hover:bg-gray-50">
+                      <td className="py-3">
+                        <div className="font-medium">{h.name}</div>
+                        <div className="text-xs text-gray-400">{h.ticker}</div>
+                      </td>
+                      <td className="py-3 text-right tabular-nums">{formatNumber(h.shares)}</td>
+                      <td className="py-3 text-right tabular-nums">{formatDKK(h.avg_cost_per_share)}</td>
+                      <td className="py-3 text-right tabular-nums">{formatDKK(h.total_cost)}</td>
+                      <td className="py-3 text-right tabular-nums">
+                        {h.current_price ? formatDKK(h.current_price) : '–'}
+                      </td>
+                      <td className="py-3 text-right tabular-nums font-medium">
+                        {formatDKK(h.current_value)}
+                      </td>
+                      <td className="py-3 text-right tabular-nums">
+                        {h.unrealized_gain != null ? (
+                          <div>
+                            <span className={h.unrealized_gain >= 0 ? 'gain' : 'loss'}>
+                              {formatDKK(h.unrealized_gain)}
+                            </span>
+                            <div className={`text-xs ${h.unrealized_gain >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                              {formatPct(h.unrealized_gain_pct)}
+                            </div>
+                          </div>
+                        ) : '–'}
+                      </td>
+                      <td className="py-3 text-right tabular-nums text-gray-500">
+                        {pctOfPortfolio != null ? `${pctOfPortfolio.toFixed(1)}%` : '–'}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                <tr className="border-t-2 border-gray-200 bg-gray-50">
+                  <td className="py-3 font-semibold" colSpan={3}>Total</td>
+                  <td className="py-3 text-right font-semibold tabular-nums">{formatDKK(totalCost)}</td>
+                  <td></td>
+                  <td className="py-3 text-right font-bold tabular-nums">{formatDKK(totalValue)}</td>
+                  <td className="py-3 text-right tabular-nums">
+                    <span className={totalGain >= 0 ? 'gain' : 'loss'}>
+                      {formatDKK(totalGain)}
+                    </span>
+                    <div className={`text-xs ${totalGain >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                      {formatPct(totalGainPct)}
+                    </div>
+                  </td>
+                  <td className="py-3 text-right text-gray-500">100%</td>
+                </tr>
+              </tfoot>
+            </table>
+            <p className="text-xs text-gray-400 mt-3">
+              Klik "Opdater kurser" for at hente seneste priser.
+            </p>
+          </>
         )}
       </div>
     </div>
