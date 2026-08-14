@@ -5,8 +5,8 @@ import { formatDKK, formatDate, formatNumber } from '../utils/format';
 
 // Danske skattesatser for aktieindkomst 2026
 const TAX_PRESETS = [
-  { label: '27% – aktieindkomst (op til 67.500 kr)', value: 0.27 },
-  { label: '42% – aktieindkomst (over 67.500 kr)', value: 0.42 },
+  { label: '27% – aktieindkomst (op til 79.400 kr)', value: 0.27 },
+  { label: '42% – aktieindkomst (over 79.400 kr)', value: 0.42 },
   { label: 'Brugerdefineret', value: 'custom' },
 ];
 
@@ -277,7 +277,7 @@ export default function Dividends() {
       <div className="mt-4 card bg-amber-50 border-amber-200">
         <p className="text-sm text-amber-800 font-medium mb-1">SKAT – Udbytte fra investeringsforeninger 2026</p>
         <p className="text-sm text-amber-700">
-          Udbytte beskattes typisk som <strong>aktieindkomst</strong>: 27% op til 67.500 kr, 42% over.
+          Udbytte beskattes typisk som <strong>aktieindkomst</strong>: 27% op til 79.400 kr, 42% over.
           Er det en rentebaseret fond, beskattes det som kapitalindkomst (marginalskattesats).
           Tjek din specifikke fonds SKATs-klassifikation.
         </p>
